@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import scipy.fftpack
 from scipy.io import wavfile
 from scipy.signal import find_peaks_cwt
+from scipy.signal import argrelmax
 import scikits.audiolab
 from numpy.random import normal
 
@@ -38,8 +39,8 @@ def plotSpectrum(y, Fs):
     plt.ylabel('|Y(freq)|')
     #plt.xlim([0, 5000])
 
-    peak_locs = find_peaks_cwt(absY,np.arange(1,3),noise_perc=10)
-    print peak_locs
+    #peak_locs = find_peaks_cwt(absY,np.arange(1,3),noise_perc=8)
+    peak_locs = argrelmax(absY, order=2)[0]
 
     plt.subplot(2,2,4)
     peak_frq = [frq[i] for i in peak_locs]
@@ -48,13 +49,17 @@ def plotSpectrum(y, Fs):
     #plt.xlim([0, 5000])
 
     #k_locs = find_peaks_cwt(peak_Y,np.arange(2,3))#,noise_perc=8)
-    k_locs = get_local_maxes(peak_Y)
-    plt.subplot(2,2,3)
+    #k_locs = get_local_maxes(peak_Y)
+    k_locs = argrelmax(np.array(peak_Y))[0]
     k_frq = [peak_frq[i] for i in k_locs]
     k_Y = [peak_Y[i] for i in k_locs]
-    print k_Y
     plt.plot(k_frq, k_Y, '*')
     #plt.xlim([0, 5000])
+
+    plt.subplot(2,2,3)
+    #plt.plot(k_frq[1], k_frq[0], 'x')
+    plt.xlabel("F2 (Hz)")
+    plt.ylabel("F1 (Hz)")
 
     plt.show()
 
@@ -73,7 +78,7 @@ n = len(sig)
 Ts = 1.0/Fs; # sampling interval
 
 # cut to only vowel
-sig = sig[int(n*0.4):int(n*0.45)]
+sig = sig[int(n*0.45):int(n*0.474)]
 
 
 #norm = pcm2float(sig, 'float32')
