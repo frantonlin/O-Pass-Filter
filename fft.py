@@ -8,6 +8,7 @@ import scikits.audiolab
 def findFormants(y, Fs, plot=True):
     # number of samplepoints
     n = len(y)
+    print n
 
     # sample spacing
     T = n/float(Fs)
@@ -33,7 +34,7 @@ def findFormants(y, Fs, plot=True):
     k_frq = [peak_frq[i] for i in k_locs]
     k_Y = [peak_Y[i] for i in k_locs]
 
-    if(plot):
+    if plot:
         plt.subplot(2,2,1)
         plt.plot(t,y,'b-',markersize=0.3)
         plt.xlabel('Time')
@@ -57,7 +58,11 @@ def findFormants(y, Fs, plot=True):
 
         plt.show()
 
-    return k_frq
+    return k_frq[:3]
+
+    def parseAudio(data):
+        pass
+
 
 Fs, sig = wavfile.read("men/m01ae.wav")
 print Fs
@@ -67,12 +72,15 @@ Ts = 1.0/Fs; # sampling interval
 
 # cut to only vowel
 sig = sig[int(n*0.45):int(n*0.474)]
+print sig
 
 norm = sig/float(max(sig))
+print type(norm)
 
 # hanning
 window = np.hanning(len(norm))
 hanned = norm*window
+print hanned
 
 scikits.audiolab.play(hanned, fs=Fs)
 
