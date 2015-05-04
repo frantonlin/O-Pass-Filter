@@ -2,12 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.fftpack
 from scipy.io import wavfile
-from scipy.signal import find_peaks_cwt
 from scipy.signal import argrelmax
 import scikits.audiolab
-from numpy.random import normal
 
-def plotSpectrum(y, Fs):
+def findFormants(y, Fs, plot=True):
     # number of samplepoints
     n = len(y)
 
@@ -19,57 +17,47 @@ def plotSpectrum(y, Fs):
 
     Y = scipy.fftpack.fft(y) # fft computing
     Y = Y[range(n/2)] # one side
-    print len(Y)
     Y = Y[:900]
 
     Ts = 1.0/Fs; # sampling interval
     t = np.arange(0,n*Ts,Ts) # time vector
-
-    plt.subplot(2,2,1)
-    plt.plot(t,y,'b-',markersize=0.3)
-    plt.xlabel('Time')
-    plt.ylabel('Amplitude')
-
-    plt.subplot(2,2,2)
-    plt.hold(True)
+    
     absY = abs(Y)
-    for i in range(len(absY)):
-        plt.plot([frq[i],frq[i]],(0,absY[i]),'r',markersize=0.1)
-    plt.xlabel('Freq (Hz)')
-    plt.ylabel('|Y(freq)|')
-    #plt.xlim([0, 5000])
 
-    #peak_locs = find_peaks_cwt(absY,np.arange(1,3),noise_perc=8)
     peak_locs = argrelmax(absY, order=2)[0]
 
-    plt.subplot(2,2,4)
     peak_frq = [frq[i] for i in peak_locs]
     peak_Y = [absY[i] for i in peak_locs]
-    plt.plot(peak_frq, peak_Y, 'gx-')
-    #plt.xlim([0, 5000])
 
-    #k_locs = find_peaks_cwt(peak_Y,np.arange(2,3))#,noise_perc=8)
-    #k_locs = get_local_maxes(peak_Y)
     k_locs = argrelmax(np.array(peak_Y))[0]
     k_frq = [peak_frq[i] for i in k_locs]
     k_Y = [peak_Y[i] for i in k_locs]
-    plt.plot(k_frq, k_Y, '*')
-    #plt.xlim([0, 5000])
 
-    plt.subplot(2,2,3)
-    #plt.plot(k_frq[1], k_frq[0], 'x')
-    plt.xlabel("F2 (Hz)")
-    plt.ylabel("F1 (Hz)")
+    if(plot):
+        plt.subplot(2,2,1)
+        plt.plot(t,y,'b-',markersize=0.3)
+        plt.xlabel('Time')
+        plt.ylabel('Amplitude')
 
-    plt.show()
+        plt.subplot(2,2,2)
+        plt.hold(True)
+        for i in range(len(absY)):
+            plt.plot([frq[i],frq[i]],(0,absY[i]),'r',markersize=0.1)
+        plt.xlabel('Freq (Hz)')
+        plt.ylabel('|Y(freq)|')
 
-def get_local_maxes(a):
-    locs = []
-    for i in range(len(a)):
-        if i > 0 and i < len(a)-1:
-            if a[i] > a[i-1] and a[i] > a[i+1] and a[i] > 20:
-                locs.append(i)
-    return locs
+        plt.subplot(2,2,4)
+        plt.plot(peak_frq, peak_Y, 'gx-')
+        plt.plot(k_frq, k_Y, '*')
+
+        plt.subplot(2,2,3)
+        plt.plot(k_frq[1], k_frq[0], 'x')
+        plt.xlabel("F2 (Hz)")
+        plt.ylabel("F1 (Hz)")
+
+        plt.show()
+
+    return k_frq
 
 Fs, sig = wavfile.read("men/m01ae.wav")
 print Fs
@@ -80,8 +68,6 @@ Ts = 1.0/Fs; # sampling interval
 # cut to only vowel
 sig = sig[int(n*0.45):int(n*0.474)]
 
-
-#norm = pcm2float(sig, 'float32')
 norm = sig/float(max(sig))
 
 # hanning
@@ -90,4 +76,4 @@ hanned = norm*window
 
 scikits.audiolab.play(hanned, fs=Fs)
 
-plotSpectrum(hanned, Fs)
+print findFormants(hanned, Fs, plot=True)
