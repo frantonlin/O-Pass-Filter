@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 SF = 44100
 PERIOD = 1024
-UH = [490,1200]
+UH = [400,1300]
 
 class Filter(pyglet.window.Window):
     def __init__(self):
@@ -20,11 +20,6 @@ class Filter(pyglet.window.Window):
         self.recording = False
         self.data = []
         self.filter = []
-        self.inp = alsaaudio.PCM(alsaaudio.PCM_CAPTURE,0)
-        self.inp.setformat(alsaaudio.PCM_FORMAT_FLOAT_LE)
-        self.inp.setchannels(1)
-        self.inp.setrate(SF) # Sets sampling rate to SF Hz
-        self.inp.setperiodsize(PERIOD)
 
     def on_draw(self):
         self.clear()
@@ -35,9 +30,11 @@ class Filter(pyglet.window.Window):
             self.recording = True
             self.data = []
             self.filter = []
-            try: self.inp.pause(0)
-            except:
-                pass
+            self.inp = alsaaudio.PCM(alsaaudio.PCM_CAPTURE,0)
+            self.inp.setformat(alsaaudio.PCM_FORMAT_FLOAT_LE)
+            self.inp.setchannels(1)
+            self.inp.setrate(SF) # Sets sampling rate to SF Hz
+            self.inp.setperiodsize(PERIOD)
 
     def on_key_release(self, symbol, modifiers):
         if symbol == key.SPACE:
@@ -49,20 +46,20 @@ class Filter(pyglet.window.Window):
             if len(norm)%2048 != 0:
                 norm = norm[:-1024]
             formants = parseAudio(norm, SF, True)
-            print "len of formants: " + str(len(formants))
-            print "expected len: " + str(len(norm)/2048.0)
+            #print "len of formants: " + str(len(formants))
+            #print "expected len: " + str(len(norm)/2048.0)
             for frame in formants:
-                print frame
+                #print frame
                 dist = sqrt((frame[0] - UH[0])**2 + (frame[1] - UH[1])**2)
-                if dist > 200:
+                if dist > 300:
                     self.filter.extend(np.ones(2048))
                 else:
                     #self.filter.extend(np.ones(2048)*dist/200.0)
                     self.filter.extend(np.zeros(2048))
 
-            print "len of filter: " + str(len(self.filter)/2048.0)
+            #print "len of filter: " + str(len(self.filter)/2048.0)
             filtered = np.array(self.filter)*norm
-            print self.filter
+            #print self.filter
 
             plt.subplot(2,1,1)
             plt.plot(norm)
