@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 
 SF = 44100
 PERIOD = 1024
-UH = [400,1300]
+#UH = [400,1360]
+#UH = [370,880] # Nur's OH
 
 class Filter(pyglet.window.Window):
     def __init__(self):
@@ -54,7 +55,7 @@ class Filter(pyglet.window.Window):
                 if dist > 300:
                     self.filter.extend(np.ones(2048))
                 else:
-                    #self.filter.extend(np.ones(2048)*dist/200.0)
+                    #self.filter.extend(np.ones(2048)*dist/600.0)
                     self.filter.extend(np.zeros(2048))
 
             #print "len of filter: " + str(len(self.filter)/2048.0)
@@ -102,6 +103,46 @@ class Filter(pyglet.window.Window):
         pyglet.clock.schedule_interval(self.update, 1.0/SF)
         pyglet.app.run()
 
+def process_wav(filename):
+    Fs, sig = wavfile.read(filename)
+
+    n = len(sig)
+    Ts = 1.0/Fs; # sampling interval
+    norm = sig/float(max(sig))
+    if len(norm)%2048 != 0:
+        norm = norm[:-1*(len(norm)%2048)]
+
+    formants = parseAudio(np.array(norm), Fs, True)
+
+    flt = []
+
+    for frame in formants:
+        dist = sqrt((frame[0] - UH[0])**2 + (frame[1] - UH[1])**2)
+        if dist > 300:
+            flt.extend(np.ones(2048))
+        else:
+            #self.filter.extend(np.ones(2048)*dist/200.0)
+            flt.extend(np.zeros(2048))
+
+    #print "len of filter: " + str(len(self.filter)/2048.0)
+    filtered = np.array(flt)*norm
+    #print self.filter
+
+    Ts = 1.0/Fs; # sampling interval
+    t = np.arange(0,len(norm)*Ts,Ts) # time vector
+
+    plt.subplot(2,1,1)
+    plt.plot(t, norm)
+    plt.ylabel('Normalized Amplitude')
+    plt.subplot(2,1,2)
+    plt.plot(t, filtered)
+    plt.ylabel('Amplitude after Filtering')
+    plt.xlabel('Time (s)')
+    plt.show()
+
+    scikits.audiolab.play(filtered, fs=SF)
+
 if __name__ == '__main__':
-    flt = Filter()
-    flt.run()
+    #lt = Filter()
+    #flt.run()
+    process_wav('peanut_butter.wav')

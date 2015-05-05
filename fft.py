@@ -72,6 +72,8 @@ def parseAudio(data, Fs, plot=False):
     if plot:
         for frame in formants:
             plt.plot(frame[1],frame[0],'rx')
+        plt.xlabel("Second Formant (Hz)")
+        plt.ylabel("First Formant (Hz)")
         plt.show()
     return formants
     """i = 4
